@@ -143,5 +143,129 @@ end
 end
 function TOOL:AddEvent(eventType, eventData)
 end
+--This can be applied to any dform really.
+--Creates a quick dpanel and makes it paint a color, used in BuildCPanel for a divider.
+local function DividerLine(dform, lineHeight, color, insetL, insetR)
+    local pn = vgui.Create('DPanel')
+    pn:SetTall(lineHeight)
+
+    --hacky way to set margins manually within the spawnmenu.
+    pn.Paint = function(self, width, height)
+        surface.SetDrawColor(color)
+        surface.DrawRect(0, 0, width, height)
+    end
+
+    dform:AddItem(pn)
+    pn:DockPadding(insetL or 32, 0, insetR or 32, 0)
+    pn:DockMargin(0, 0, 0, 128)
+
+    return pn
+end
+
+local function EmptySpacer(dform, height)
+    local pn = vgui.Create('DPanel')
+    pn:SetTall(height)
+    pn.Paint = function() end
+    dform:AddItem(pn)
+
+    return pn
+end
+local function ComboPaint(self, width, height)
+    surface.SetDrawColor(color_black)
+    surface.DrawOutlinedRect(0,0,width,height,1)
+end
+local function PresetList(dform, controlHelp, presetType)
+    dform:ControlHelp(controlHelp)
+    local pn = vgui.Create('DPanel')
+    
+    local addPresetButton = pn:Add('DButton')
+    addPresetButton:SetIcon('icon16/add.png')
+    addPresetButton:SetText('')
+    addPresetButton:SetWide(32)
+    addPresetButton:Dock(LEFT)
+    addPresetButton.Paint = function() end
+    local cmb = pn:Add('DComboBox')
+    cmb.PaintOver = ComboPaint
+    cmb:SetTextColor(color_black)
+    cmb:Dock(FILL)
+    cmb:AddChoice('FILLER_SELECTION_OPTION')
+    dform:AddItem(pn)
+end
+
+local function CollapsibleCategory(dform, categoryTitle)
+    local cat = vgui.Create('DCollapsibleCategory')
+    cat:SetLabel(categoryTitle)
+    dform:AddItem(cat)
+
+    return cat
+end
+
+local toolTutorial = { 'PRE-RELEASE', 'The Interactionator is a tool used to generate interactions on any entity.', 'An interaction is composed of one or several events, which have a trigger, that trigger is unique to that event.', 'Triggers can have delays, and can vary in type within the interaction, allowing you to dynamically link actions together.', 'You can also make interactions trigger other interactions, if that interaction has a name.', 'The events available vary based on the entity selected. A single entity can only have one interaction. ', 'Currently, only physics props are officially supported. Use on other entities at your own risk.' }
+local function ComboBox(dform, label, opts)
+    local cmb, label = dform:ComboBox(label, '')
+    for k, v in pairs(opts) do
+        cmb:AddChoice(v)
+    end
+    cmb:SetTextColor(color_black)
+    cmb:SizeToContents()
+    cmb.PaintOver = ComboPaint
+end
+
+local function BuildTriggerSettingsCategory(dform, category)
+    local pn = vgui.Create('DPanel')
+    pn:SetTall(150)
+    local tbn = pn:Add('DButton')
+    tbn:SetText('Fuck')
+    category:SetContents(pn)
+
+end
 function TOOL.BuildCPanel(panel)
+    --@todo fill
+    -- panel:Help('Tool tutorial:\nJust use the tool omegalul')
+    DividerLine(panel, 2, Color(100, 100, 100, 100))
+    for i = 1, #toolTutorial do
+        panel:Help(toolTutorial[i])
+    end
+
+    DividerLine(panel, 2, Color(100, 100, 100, 100))
+    EmptySpacer(panel, 8)
+    PresetList(panel, 'You can load a preset interaction below.', 'interaction')
+    local lv = vgui.Create('DListView')
+    panel:AddItem(lv)
+    ix.gui.jankylistview = lv
+    --We need to manually set the headers text color as black.
+    --Since we don't need the columns later, we can just use the func on the object it returns.
+    lv:AddColumn('Event').Header:SetTextColor(color_black)
+    lv:AddColumn('Delay').Header:SetTextColor(color_black)
+    lv:AddColumn('When').Header:SetTextColor(color_black)
+    lv:Dock(TOP)
+    lv:SetTall(200)
+    DividerLine(panel, 2, Color(100, 100, 100, 100))
+    -- DividerLine(panel, 1, color_black)
+    panel:Help('Event Settings')
+    EmptySpacer(panel, 2)
+    PresetList(panel, 'You can load a preset event below.', 'event')
+    -- EmptySpacer(panel, 4)
+    -- DividerLine(panel, 2, Color(100, 100, 100, 100))
+    -- DividerLine(panel, 1, color_black)
+    EmptySpacer(panel, 3)
+    -- panel:ControlHelp('Event Type')
+    panel:ControlHelp('An event name is only required if this event should be triggered manually, or by another event.')
+    panel:TextEntry('Event Name', '')
+    -- panel:ComboBox('Event Type', '')
+    ComboBox(panel, 'Event Type', {'Razzle', 'My fucking', 'Dazzle'})
+    EmptySpacer(panel, 3)
+    panel:Help('Execution Options')
+    EmptySpacer(panel, 4)
+    panel:NumberWang('Event Delay', '', 0, 30000)
+    EmptySpacer(panel, 4)
+    DividerLine(panel, 1, color_black)
+    EmptySpacer(panel, 4)
+    CollapsibleCategory(panel, 'Event Specific Settings')
+    EmptySpacer(panel, 16)
+    panel:Help('Trigger Settings')
+    ComboBox(panel, 'Trigger Type', {'Manual'})
+    local triggerCategory = CollapsibleCategory(panel, 'Trigger Specific Settings')
+    BuildTriggerSettingsCategory(panel, triggerCategory)
+end
 end
