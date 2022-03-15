@@ -1,7 +1,7 @@
 --WOO shitty code!
 --todo, not shitty.
 TOOL.Category = 'Examples'
-TOOL.Name = 'Your Tools name'
+TOOL.Name = 'legacy'
 TOOL.Command = nil
 TOOL.ConfigName = ''
 
