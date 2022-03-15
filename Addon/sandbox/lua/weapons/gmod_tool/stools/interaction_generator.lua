@@ -62,11 +62,71 @@ function TOOL:LeftClick(trace)
         return true
     end
 end
+
 function TOOL:Notify(msg)
+    INTERACTION_NOTIFICATIONS[#INTERACTION_NOTIFICATIONS + 1] = msg
 end
+
 function TOOL:RightClick(trace)
+    if not IsFirstTimePredicted() then return true end
+
+    if trace.HitWorld then
+        self:SetStage(0)
+
+        if CLIENT then
+            INTERACTION_IS_ENT_SELECTED = false
+            INTERACTION_SELECTED_ENTITY = nil
+            self:Notify('Unselected Entity.')
+
+            return true
+        end
+
+        return true
+    end
+
+    local ent = trace.Entity
+    if not IsValid(ent) then return false end
+    self:SetStage(1)
+
+    if CLIENT then
+        INTERACTION_IS_ENT_SELECTED = true
+        --We must allocate an array type for halo drawing in order to avoid creating a new table each frame. This adds an operational complexity to this variable's lookup!
+        INTERACTION_SELECTED_ENTITY = { ent }
+        self:Notify(Format('Selected Entity: %s (%s)', ent:EntIndex(), ent:GetClass()))
+
+        return true
+    end
+
+    return true
 end
+
+hook.Add('PreDrawHalos', 'interactionTOOL.DrawHaloAroundObject', function()
+    if INTERACTION_IS_ENT_SELECTED then
+        halo.Add(INTERACTION_SELECTED_ENTITY, color_white, 1, 1, 1, 1, 1)
+    end
+end)
+
+INTERACTION_NOTIFICATIONS = { }
+
 function TOOL:DrawHUD()
+    local scrw = ScrW() -- @todo figure out better way to cache this, could create a lookup bump in performance.
+    local scrh = ScrH()
+    surface.SetFont('DebugFixed')
+    local totalHeight = 0
+
+    for k, v in pairs(INTERACTION_NOTIFICATIONS) do
+        local txw, txh = surface.GetTextSize(v)
+        draw.DrawText(v, 'DebugFixed', scrw - (txw + 32), 128 + totalHeight, col, TEXT_ALIGN_LEFT) --add height of text?
+        totalHeight = totalHeight + (txh + 8)
+    end
+
+    if totalHeight > scrh * .5 then
+        table.remove(INTERACTION_NOTIFICATIONS, 1)
+    end
+
+    if CurTime() % 5 == 0 and #INTERACTION_NOTIFICATIONS > 1 then
+        table.remove(INTERACTION_NOTIFICATIONS, 1)
+    end
 end
 function TOOL:DrawToolScreen(width, height)
 end
