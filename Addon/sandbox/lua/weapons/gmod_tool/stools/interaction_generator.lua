@@ -128,7 +128,18 @@ function TOOL:DrawHUD()
         table.remove(INTERACTION_NOTIFICATIONS, 1)
     end
 end
+
 function TOOL:DrawToolScreen(width, height)
+    -- Draw black background
+    surface.SetDrawColor(Color(20, 20, 20))
+    surface.DrawRect(0, 0, width, height)
+    -- Draw white text in middle
+    draw.SimpleText("Interactionator", "DermaLarge", width / 2, 32, Color(200, 200, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+
+    if INTERACTION_IS_ENT_SELECTED then
+        draw.DrawText(Format('Entity: %s', INTERACTION_SELECTED_ENTITY[1]:GetClass()), 'DermaLarge', 8, 32 + 32, color_white, TEXT_ALIGN_LEFT)
+    end
+end
 end
 function TOOL:AddEvent(eventType, eventData)
 end
