@@ -40,7 +40,27 @@ if CLIENT then
     language.Add('tool.interaction_generator.right_select_prompt_selected', 'Select another entity, or select the world to deselect.')
     language.Add('tool.interaction_generator.1', 'Now edit the interaction in the spawn menu, or left click to apply it.')
 end
+
 function TOOL:LeftClick(trace)
+    --@todo privilege check
+    if not IsFirstTimePredicted() then return true end --This is stupid.
+    local ent = trace.Entity
+
+    if SERVER then
+        if ent:GetClass() == 'prop_physics' then
+            net.Start('InteractionGenerator_RequestCurrentEvent')
+            net.WriteEntity(ent)
+            net.Send(self:GetOwner())
+        end
+
+        return true
+    end
+
+    if CLIENT then
+        ent:EmitSound('buttons/button1.wav', 100)
+
+        return true
+    end
 end
 function TOOL:Notify(msg)
 end
