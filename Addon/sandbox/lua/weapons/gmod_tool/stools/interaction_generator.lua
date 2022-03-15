@@ -1,0 +1,2 @@
+--todo, not shitty.
+--globals for rendering
